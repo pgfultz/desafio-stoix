@@ -1,6 +1,6 @@
 # Desafio Stoix - Sistema de Gerenciamento de Tarefas
 
-Sistema simples de gerenciamento de tarefas desenvolvido com backend em Node.js/TypeScript e frontend em React/TypeScript.
+Sistema simples de gerenciamento de tarefas, com backend em Node.js/TypeScript e frontend em React/TypeScript.
 
 ## Arquitetura
 
