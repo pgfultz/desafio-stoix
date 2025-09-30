@@ -1,23 +1,119 @@
-:root {
-  color-scheme: light dark;
-  --bg: #0b0c10;
-  --fg: #c5c6c7;
-  --accent: #66fcf1;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base layer */
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --background: 220 25% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --chart-1: 221 83% 53%;
+    --chart-2: 212 95% 68%;
+    --chart-3: 216 92% 60%;
+    --chart-4: 210 98% 78%;
+    --chart-5: 212 97% 87%;
+    --radius: 0.75rem;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-foreground antialiased;
+    background-attachment: fixed;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 221 83% 53%;
+    --chart-3: 212 95% 68%;
+    --chart-4: 216 92% 60%;
+    --chart-5: 210 98% 78%;
+  }
+  .dark body {
+    @apply bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950;
+  }
 }
 
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: var(--bg);
-  color: var(--fg);
+/* Components layer */
+@layer components {
+  .container-app {
+    @apply max-w-5xl mx-auto px-4 py-8 sm:py-12;
+  }
+  
+  .glass-card {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl shadow-2xl;
+  }
+  
+  .task-item {
+    @apply bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02];
+  }
+  
+  .task-item-completed {
+    @apply opacity-60 hover:opacity-80;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-lg p-2 transition-all duration-200 hover:bg-accent;
+  }
 }
 
-.container {
-  max-width: 960px;
-  margin: 48px auto;
-  padding: 0 16px;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
-h1 { color: var(--accent); }
-code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgb(0 0 0 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
