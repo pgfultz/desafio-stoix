@@ -2,10 +2,10 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY prisma ./prisma/
 
-RUN npm ci
+RUN npm install
 
 RUN npx prisma generate
 
@@ -19,10 +19,10 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 RUN npx prisma generate
 COPY --from=builder /app/dist ./dist
