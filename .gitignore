@@ -4,6 +4,7 @@ node_modules/
 # Builds
 /dist/
 /apps/backend/dist/
+/apps/frontend/dist/
 /build/
 *.log
 

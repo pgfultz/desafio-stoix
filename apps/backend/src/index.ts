@@ -1,11 +1,15 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import tasksRouter from './routes/tasks';
-import { csrfConstants, generateCsrfToken, setCsrfCookie } from './security/csrf';
-import { errorHandler } from './middleware/errorHandler';
-import { config } from './config';
-import { prisma } from './prisma';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import tasksRouter from "./routes/tasks";
+import {
+  csrfConstants,
+  generateCsrfToken,
+  setCsrfCookie,
+} from "./security/csrf";
+import { errorHandler } from "./middleware/errorHandler";
+import { config } from "./config";
+import { prisma } from "./prisma";
 
 const app = express();
 const PORT = Number(config.port);
@@ -14,11 +18,11 @@ app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
 });
 
-app.get('/csrf-token', (req, res) => {
+app.get("/csrf-token", (req, res) => {
   let token = req.cookies?.[csrfConstants.CSRF_COOKIE];
   if (!token) {
     token = generateCsrfToken();
@@ -27,7 +31,7 @@ app.get('/csrf-token', (req, res) => {
   res.json({ csrfToken: token, header: csrfConstants.CSRF_HEADER });
 });
 
-app.use('/api/tasks', tasksRouter);
+app.use("/api/tasks", tasksRouter);
 
 app.use(errorHandler);
 
@@ -37,7 +41,7 @@ async function start() {
       console.log(`Backend running on http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error('Failed to start server', err);
+    console.error("Failed to start server", err);
     process.exit(1);
   }
 }
@@ -45,7 +49,7 @@ async function start() {
 start();
 
 async function shutdown() {
-  console.log('Shutting down...');
+  console.log("Shutting down...");
   try {
     await prisma.$disconnect();
   } finally {
@@ -53,5 +57,5 @@ async function shutdown() {
   }
 }
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
