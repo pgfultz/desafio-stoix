@@ -28,7 +28,12 @@ app.get("/csrf-token", (req, res) => {
     token = generateCsrfToken();
   }
   setCsrfCookie(res, token);
-  res.json({ csrfToken: token, header: csrfConstants.CSRF_HEADER });
+  // sempre retorna o header necessario, mas nao expoe o token s ja existir no cookie
+  res.json({ 
+    header: csrfConstants.CSRF_HEADER,
+    // so expoe o token se nao houver cookie (primeira requisicao)
+    ...(req.cookies?.[csrfConstants.CSRF_COOKIE] ? {} : { csrfToken: token })
+  });
 });
 
 app.use("/api/tasks", tasksRouter);

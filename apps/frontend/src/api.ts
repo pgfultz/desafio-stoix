@@ -44,13 +44,9 @@ async function request<T>(
     const status = e?.response?.status;
     const responseData = e?.response?.data;
 
-    // Se receber 403 com retry=true, atualiza o token e tenta novamente
+    // Se receber 403 com retry=true, obtém novo token e tenta novamente
     if (status === 403 && responseData?.retry && retryCount === 0) {
-      if (responseData.csrfToken) {
-        csrfToken = responseData.csrfToken;
-      } else {
-        await getCsrfToken();
-      }
+      await getCsrfToken();
       // Atualiza o header com o novo token
       if (headers && csrfToken) {
         headers[CSRF_HEADER] = csrfToken;
