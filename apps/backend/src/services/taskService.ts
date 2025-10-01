@@ -4,6 +4,7 @@ import { Prisma, type Task } from "@prisma/client";
 interface PaginationParams {
   page?: number;
   limit?: number;
+  orderBy?: "completed" | "createdAt";
 }
 
 interface PaginatedResponse<T> {
