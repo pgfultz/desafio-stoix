@@ -22,6 +22,7 @@ export type PaginatedResponse<T> = {
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 const CSRF_HEADER = "x-csrf-token";
 let csrfToken: string | null = null;
+let csrfPromise: Promise<string> | null = null;
 
 const http = axios.create({
   baseURL: BASE,
@@ -33,29 +34,62 @@ async function request<T>(
   method: "get" | "post" | "put" | "delete",
   path: string,
   data?: any,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
+  retryCount: number = 0
 ): Promise<T> {
   try {
     const res = await http.request<T>({ method, url: path, data, headers });
     return res.data;
   } catch (e: any) {
     const status = e?.response?.status;
-    const msg = e?.response?.data?.error || e?.message || "Erro";
+    const responseData = e?.response?.data;
+
+    // Se receber 403 com retry=true, atualiza o token e tenta novamente
+    if (status === 403 && responseData?.retry && retryCount === 0) {
+      if (responseData.csrfToken) {
+        csrfToken = responseData.csrfToken;
+      } else {
+        await getCsrfToken();
+      }
+      // Atualiza o header com o novo token
+      if (headers && csrfToken) {
+        headers[CSRF_HEADER] = csrfToken;
+      }
+      return request<T>(method, path, data, headers, retryCount + 1);
+    }
+
+    const msg = responseData?.error || e?.message || "Erro";
     throw new Error(`${status ?? ""} ${msg}`.trim());
   }
 }
 
 export async function getCsrfToken(): Promise<string> {
-  const data = await request<{ csrfToken: string; header: string }>(
-    "get",
-    `/csrf-token`
-  );
-  csrfToken = data.csrfToken;
-  return csrfToken;
+  if (csrfPromise) {
+    return csrfPromise;
+  }
+
+  csrfPromise = (async () => {
+    try {
+      const data = await request<{ csrfToken: string; header: string }>(
+        "get",
+        `/csrf-token`
+      );
+      csrfToken = data.csrfToken;
+      return csrfToken;
+    } finally {
+      csrfPromise = null;
+    }
+  })();
+
+  return csrfPromise;
 }
 
 async function ensureCsrf() {
-  if (!csrfToken) await getCsrfToken();
+  if (!csrfToken && !csrfPromise) {
+    await getCsrfToken();
+  } else if (csrfPromise) {
+    await csrfPromise;
+  }
 }
 
 export const api = {

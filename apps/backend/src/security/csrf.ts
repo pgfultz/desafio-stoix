@@ -32,7 +32,19 @@ export function csrfProtection(
   const headerToken =
     (req.headers[CSRF_HEADER] as string | undefined) ?? undefined;
 
-  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+  // Se não há cookie, gera um novo token e retorna erro pedindo retry
+  if (!cookieToken) {
+    const newToken = generateCsrfToken();
+    setCsrfCookie(res, newToken);
+    return res.status(403).json({ 
+      error: "CSRF token missing", 
+      csrfToken: newToken,
+      retry: true 
+    });
+  }
+
+  // Valida se o header está presente e corresponde ao cookie
+  if (!headerToken || cookieToken !== headerToken) {
     return res.status(403).json({ error: "Invalid CSRF token" });
   }
 
