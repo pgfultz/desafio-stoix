@@ -4,8 +4,8 @@ import cookieParser from "cookie-parser";
 import tasksRouter from "./routes/tasks";
 import {
   csrfConstants,
-  generateCsrfToken,
-  setCsrfCookie,
+  refreshCsrfToken,
+  csrfProtection,
 } from "./security/csrf";
 import { errorHandler } from "./middleware/errorHandler";
 import { config } from "./config";
@@ -14,29 +14,19 @@ import { prisma } from "./prisma";
 const app = express();
 const PORT = Number(config.port);
 
-app.use(cors({ origin: config.corsOrigin, credentials: true }));
+app.use(cors({ origin: config.corsOrigin, credentials: true, exposedHeaders: [csrfConstants.HEADER_NAME], }));
 app.use(express.json());
 app.use(cookieParser());
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "All ok" });
 });
 
 app.get("/csrf-token", (req, res) => {
-  let token = req.cookies?.[csrfConstants.CSRF_COOKIE];
-  if (!token) {
-    token = generateCsrfToken();
-  }
-  setCsrfCookie(res, token);
-  // sempre retorna o header necessario, mas nao expoe o token s ja existir no cookie
-  res.json({ 
-    header: csrfConstants.CSRF_HEADER,
-    // so expoe o token se nao houver cookie (primeira requisicao)
-    ...(req.cookies?.[csrfConstants.CSRF_COOKIE] ? {} : { csrfToken: token })
-  });
+  refreshCsrfToken(req, res);
 });
 
-app.use("/api/tasks", tasksRouter);
+app.use("/api/tasks", csrfProtection, tasksRouter);
 
 app.use(errorHandler);
 

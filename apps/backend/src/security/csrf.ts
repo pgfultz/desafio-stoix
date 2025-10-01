@@ -1,62 +1,156 @@
 import type { Request, Response, NextFunction } from "express";
 import crypto from "node:crypto";
 
-const CSRF_COOKIE = "csrfToken";
-const CSRF_HEADER = "x-csrf-token";
+const CSRF_COOKIE_NAME = "csrf-token";
+const CSRF_HEADER_NAME = "x-csrf-token";
+const TOKEN_LENGTH = 32;
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-export function generateCsrfToken(): string {
-  return crypto.randomBytes(24).toString("hex");
+interface CsrfConfig {
+  ignoredMethods: Set<string>;
+  trustedOrigins: string[];
+  cookieOptions: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "strict" | "lax" | "none";
+    path: string;
+    maxAge: number;
+  };
 }
 
-export function setCsrfCookie(res: Response, token: string) {
+function createSecureToken(): string {
+  return crypto.randomBytes(TOKEN_LENGTH).toString("base64url");
+}
+
+function getConfig(): CsrfConfig {
   const isProduction = process.env.NODE_ENV === "production";
-  res.cookie(CSRF_COOKIE, token, {
-    httpOnly: true, // Torna o cookie inacessivel para javascript (proteção XSS)
-    sameSite: isProduction ? "strict" : "lax", // strict em producao, lax em dev
-    secure: isProduction, // https apenas em producao
-    path: "/",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
+  const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+  
+  return {
+    ignoredMethods: new Set(["GET", "HEAD", "OPTIONS"]),
+    trustedOrigins: [frontendOrigin],
+    cookieOptions: {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "strict" : "lax",
+      path: "/",
+      maxAge: COOKIE_MAX_AGE,
+    },
+  };
+}
+
+function isOriginTrusted(origin: string | undefined, trustedOrigins: string[]): boolean {
+  if (!origin) return false;
+  
+  try {
+    const originUrl = new URL(origin);
+    return trustedOrigins.some(trusted => {
+      const trustedUrl = new URL(trusted);
+      return originUrl.origin === trustedUrl.origin;
+    });
+  } catch {
+    return false;
+  }
+}
+
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+export function generateCsrfToken(): string {
+  return createSecureToken();
+}
+
+export function setCsrfCookie(res: Response, token: string): void {
+  const config = getConfig();
+  res.cookie(CSRF_COOKIE_NAME, token, config.cookieOptions);
+}
+
+export function clearCsrfCookie(res: Response): void {
+  const config = getConfig();
+  res.clearCookie(CSRF_COOKIE_NAME, {
+    path: config.cookieOptions.path,
+    secure: config.cookieOptions.secure,
+    sameSite: config.cookieOptions.sameSite,
   });
 }
 
-export function csrfProtection(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function csrfProtection(req: Request, res: Response, next: NextFunction): void {
+  const config = getConfig();
   const method = req.method.toUpperCase();
-  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+
+  if (config.ignoredMethods.has(method)) {
     return next();
   }
 
-  const cookieToken = req.cookies?.[CSRF_COOKIE];
-  const headerToken = (req.headers[CSRF_HEADER] as string | undefined)?.trim();
-
-  // 🔒 Validação adicional: verifica se a origem é confiável
   const origin = req.headers.origin;
   const referer = req.headers.referer;
-  const allowedOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-  
-  if (origin && !origin.includes(allowedOrigin.replace(/https?:\/\//, ''))) {
-    return res.status(403).json({ error: "Origin not allowed" });
+
+  if (!isOriginTrusted(origin, config.trustedOrigins) && 
+      !isOriginTrusted(referer, config.trustedOrigins)) {
+    res.status(403).json({ 
+      error: "Forbidden: Invalid origin",
+      code: "INVALID_ORIGIN" 
+    });
+    return;
   }
 
-  // Se não há cookie, gera um novo token
+  const cookieToken = req.cookies?.[CSRF_COOKIE_NAME];
+  const headerToken = req.headers[CSRF_HEADER_NAME] as string;
+
   if (!cookieToken) {
     const newToken = generateCsrfToken();
     setCsrfCookie(res, newToken);
-    return res.status(403).json({
+    res.status(403).json({
       error: "CSRF token required",
+      code: "TOKEN_REQUIRED",
       retry: true,
     });
+    return;
   }
 
-  // Valida se o header está presente e corresponde ao cookie
-  if (!headerToken || cookieToken !== headerToken) {
-    return res.status(403).json({ error: "Invalid CSRF token" });
+  if (!headerToken) {
+    res.status(403).json({
+      error: "CSRF header missing",
+      code: "HEADER_MISSING",
+    });
+    return;
   }
 
-  return next();
+  if (!constantTimeCompare(cookieToken, headerToken.trim())) {
+    clearCsrfCookie(res);
+    res.status(403).json({
+      error: "Invalid CSRF token",
+      code: "TOKEN_MISMATCH",
+    });
+    return;
+  }
+
+  next();
 }
 
-export const csrfConstants = { CSRF_COOKIE, CSRF_HEADER };
+export function refreshCsrfToken(req: Request, res: Response): void {
+  const existingToken = req.cookies?.[CSRF_COOKIE_NAME];
+  let token = existingToken;
+  
+  if (!token) {
+    token = generateCsrfToken();
+    setCsrfCookie(res, token);
+  }
+  
+  res.json({
+    token: token,
+    header: CSRF_HEADER_NAME,
+  });
+}
+
+export const csrfConstants = {
+  COOKIE_NAME: CSRF_COOKIE_NAME,
+  HEADER_NAME: CSRF_HEADER_NAME,
+};
