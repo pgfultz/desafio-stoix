@@ -9,10 +9,11 @@ export function generateCsrfToken(): string {
 }
 
 export function setCsrfCookie(res: Response, token: string) {
+  const isProduction = process.env.NODE_ENV === "production";
   res.cookie(CSRF_COOKIE, token, {
     httpOnly: false,
-    sameSite: "lax",
-    secure: false,
+    sameSite: "none",
+    secure: isProduction,
     path: "/",
     maxAge: 1000 * 60 * 60 * 24 * 7,
   });
@@ -36,10 +37,10 @@ export function csrfProtection(
   if (!cookieToken) {
     const newToken = generateCsrfToken();
     setCsrfCookie(res, newToken);
-    return res.status(403).json({ 
-      error: "CSRF token missing", 
+    return res.status(403).json({
+      error: "CSRF token missing",
       csrfToken: newToken,
-      retry: true 
+      retry: true,
     });
   }
 
