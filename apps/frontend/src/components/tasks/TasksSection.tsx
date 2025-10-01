@@ -1,6 +1,6 @@
 import React from "react";
 import { ListTodo } from "lucide-react";
-import type { Task } from "../../api";
+import type { Task } from "../../lib/api";
 
 interface TasksSectionProps {
   taskCount: number;

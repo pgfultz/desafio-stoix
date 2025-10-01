@@ -9,7 +9,7 @@ import { TasksSection } from "./components/tasks/TasksSection";
 import { TaskList } from "./components/tasks/TaskList";
 import { DeleteTaskDialog } from "./components/tasks/DeleteTaskDialog";
 import { useTasks } from "./hooks/useTasks";
-import type { Task } from "./api";
+import type { Task } from "./lib/api";
 
 function App() {
   const {

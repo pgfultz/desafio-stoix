@@ -9,7 +9,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { AlertTriangle } from "lucide-react";
-import type { Task } from "../../api";
+import type { Task } from "../../lib/api";
 
 interface DeleteTaskDialogProps {
   task: Task | null;

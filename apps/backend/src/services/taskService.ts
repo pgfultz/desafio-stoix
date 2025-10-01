@@ -21,7 +21,6 @@ export class TaskService {
   async getAllTasks(
     params?: PaginationParams
   ): Promise<PaginatedResponse<Task>> {
-    console.log(params);
     const page = Math.max(1, params?.page || 1);
     const limit = params?.limit || 10;
     const skip = (page - 1) * limit;

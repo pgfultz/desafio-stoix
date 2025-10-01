@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ListTodo } from "lucide-react";
 import { TaskItem } from "./TaskItem";
 import { Pagination } from "../ui/pagination";
-import type { Task } from "../../api";
+import type { Task } from "../../lib/api";
 
 interface TaskListProps {
   tasks: Task[];

@@ -1,5 +1,5 @@
 // Re-export API types for better organization
-export type { Task } from "../api";
+export type { Task } from "../lib/api";
 
 // UI-specific types
 export interface DialogState<T> {

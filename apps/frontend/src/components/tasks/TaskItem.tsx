@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { motion } from "motion/react";
 import { Trash2 } from "lucide-react";
 import { InlineEditable } from "./InlineEditable";
-import type { Task } from "../../api";
+import type { Task } from "../../lib/api";
 
 interface TaskItemProps {
   task: Task;

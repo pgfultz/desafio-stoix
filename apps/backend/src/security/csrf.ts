@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import crypto from "node:crypto";
+import { config } from "../config";
 
 const CSRF_COOKIE_NAME = "csrf-token";
 const CSRF_HEADER_NAME = "x-csrf-token";
@@ -24,15 +25,14 @@ function createSecureToken(): string {
 
 function getConfig(): CsrfConfig {
   const isProduction = process.env.NODE_ENV === "production";
-  const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
   
   return {
     ignoredMethods: new Set(["GET", "HEAD", "OPTIONS"]),
-    trustedOrigins: [frontendOrigin],
+    trustedOrigins: [config.corsOrigin],
     cookieOptions: {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      sameSite: isProduction ? "none" : "lax",
       path: "/",
       maxAge: COOKIE_MAX_AGE,
     },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { api, type Task, type PaginatedResponse } from "../api";
+import { api, type Task, type PaginatedResponse } from "../lib/api";
 import { toast } from "sonner";
 
 export function useTasks() {
