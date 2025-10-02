@@ -30,8 +30,8 @@ services:
       - "${PORT:-4000}:4000"
     environment:
       PORT: ${PORT:-4000}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-tasks}
-      POSTGRES_HOST: postgres
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/tasks}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB:-tasks}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
